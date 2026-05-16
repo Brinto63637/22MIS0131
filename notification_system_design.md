@@ -188,3 +188,92 @@ Socket.IO WebSocket Service
 | Database | PostgreSQL |
 | Real-Time Notifications | Socket.IO |
 | Authentication | JWT |
+
+# Stage 3
+
+## Given Query
+
+```sql
+SELECT * FROM notifications
+WHERE studentID = 1042 AND isRead = false
+ORDER BY createdAt ASC;
+```
+
+---
+
+# Is the Query Accurate?
+
+yes ,it fetches unread notifications correctly for the student.
+
+---
+
+# Why is it Slow?
+
+- Table has rows increased to 5,000,000 records 
+- DB performs full table scan Without indexes
+- `ORDER BY` increases our sorting cost
+- `SELECT *` does work in unnecessary columns
+
+Time complexity:
+```text
+O(N)
+```
+
+---
+
+# Optimized Query
+
+```sql
+SELECT id, title, message, createdAt
+FROM notifications
+WHERE studentID = 1042
+AND isRead = false
+ORDER BY createdAt ASC;
+```
+
+---
+
+# Best Index
+
+```sql
+CREATE INDEX idx_student_read_created
+ON notifications(studentID, isRead, createdAt);
+```
+
+After indexing:
+```text
+O(log N)
+```
+
+---
+
+# Should We Add Indexes on Every Column?
+
+No.
+
+Problems:
+- it will cost More storage usage
+- makes queries Slower 
+- wastage of resources will happen because Unused indexes
+
+Indexes should be used with frequently searched columns.
+
+---
+
+# Query for Placement Notifications in Last 7 Days
+
+```sql
+SELECT DISTINCT studentID
+FROM notifications
+WHERE notificationType = 'Placement'
+AND createdAt >= NOW() - INTERVAL '7 days';
+```
+
+---
+
+# Recommended Index
+
+```sql
+CREATE INDEX idx_type_created
+ON notifications(notificationType, createdAt);
+```
