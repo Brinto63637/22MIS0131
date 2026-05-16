@@ -413,3 +413,129 @@ worker():
 - Reliable
 - Scalable
 - Supports retries
+
+# Stage 6
+
+## Approach
+
+I used a priority-based ranking system to display the most important unread notifications first.
+
+Priority is calculated using:
+- Notification type weight
+- Recency (latest notifications get higher priority)
+
+Weight order:
+```text
+Placement > Result > Event
+```
+
+Example weights:
+```python
+Placement = 3
+Result = 2
+Event = 1
+```
+
+Final score:
+```text
+priority_score = type_weight + recency_score
+```
+
+Notifications are sorted based on this score and the top 10 are displayed.
+
+---
+
+# How Top 10 is Maintained Efficiently
+
+Instead of sorting all notifications every time:
+- Maintain a Min Heap / Priority Queue of size 10
+- When a new notification arrives:
+  - compare with lowest priority item
+  - replace if higher priority
+
+Time Complexity:
+```text
+O(log 10) ≈ O(1)
+```
+
+This is efficient even when notifications continuously arrive.
+
+---
+
+# Python Code
+
+```python
+from datetime import datetime
+
+notifications = [
+    {
+        "ID": "1",
+        "Type": "Placement",
+        "Message": "AMD hiring",
+        "Timestamp": "2026-04-22 17:49:42"
+    },
+    {
+        "ID": "2",
+        "Type": "Result",
+        "Message": "mid-sem",
+        "Timestamp": "2026-04-22 17:51:30"
+    },
+    {
+        "ID": "3",
+        "Type": "Event",
+        "Message": "farewell",
+        "Timestamp": "2026-04-22 17:51:06"
+    }
+]
+
+weights = {
+    "Placement": 3,
+    "Result": 2,
+    "Event": 1
+}
+
+current_time = datetime.now()
+
+for n in notifications:
+
+    ts = datetime.strptime(
+        n["Timestamp"],
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    recency_score = 1
+
+    n["score"] = weights[n["Type"]] + recency_score
+
+top_notifications = sorted(
+    notifications,
+    key=lambda x: x["score"],
+    reverse=True
+)[:10]
+
+for n in top_notifications:
+    print(
+        n["Type"],
+        "-",
+        n["Message"]
+    )
+```
+
+---
+
+# Output
+
+```text
+Placement - AMD hiring
+Result - mid-sem
+Event - farewell
+```
+
+---
+
+# Advantages
+
+- Fast retrieval
+- Real-time ranking
+- Easy to scale
+- Supports continuous incoming notifications
