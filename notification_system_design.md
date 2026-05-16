@@ -335,3 +335,81 @@ Use:
 - Proper indexing
 
 This improves performance and scalability.
+
+
+# Stage 5
+
+## Problems
+
+- processing Sequentially is slow
+- retry mechanism is not there
+- Email failures can miss notifications
+- High server load
+
+---
+
+# If 200 Emails Fail
+
+- Those students will not receive emails
+- jobs that are Failed should be logged and retried
+
+---
+
+# Better Solution
+
+Use:
+- Queue (Kafka/RabbitMQ)
+- Async workers
+- Retry mechanism
+
+Flow:
+
+```text
+HR Request → Queue → Workers → Email + App Notification
+```
+
+---
+
+# Should DB Save and Email Happen Together?
+
+No.
+
+- firstly Save to Database 
+- Email can fail and be retried later
+- Notifications should still exist in Database
+
+---
+
+# Revised Pseudocode
+
+```python
+function notify_all(student_ids, message):
+
+    for student_id in student_ids:
+
+        save_to_db(student_id, message)
+
+        queue.publish(student_id, message)
+
+
+worker():
+
+    job = queue.consume()
+
+    try:
+        send_email(job)
+
+        push_to_app(job)
+
+    except:
+        retry(job)
+```
+
+---
+
+# Advantages
+
+- Faster
+- Reliable
+- Scalable
+- Supports retries
