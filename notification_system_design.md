@@ -277,3 +277,61 @@ AND createdAt >= NOW() - INTERVAL '7 days';
 CREATE INDEX idx_type_created
 ON notifications(notificationType, createdAt);
 ```
+
+
+# Stage 4
+
+## Problem
+
+Fetching notifications on every page load increases Database load and reduce the performence of the system.
+
+---
+
+# Solutions
+
+## Redis Cache
+- this ensures Faster reads
+- decreases Database load
+- Tradeoff: cache can become stale
+
+---
+
+## Pagination
+
+```http
+GET /notifications?page=1&limit=10
+```
+
+- Fetches only limited amount of records
+- Tradeoff: multiple API calls required
+
+---
+
+## WebSockets
+- Real-time notifications
+- Fewer Database requests
+- Tradeoff: complex setup
+
+---
+
+## Indexing
+
+```sql
+CREATE INDEX idx_student_read_created
+ON notifications(studentID, isRead, createdAt);
+```
+
+- queries will be Faster
+- Tradeoff: slower writes
+
+---
+
+# Final Recommendation
+
+Use:
+- Redis caching
+- Pagination
+- WebSockets
+- Proper indexing
+
+This improves performance and scalability.
